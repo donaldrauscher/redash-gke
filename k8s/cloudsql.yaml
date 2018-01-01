@@ -1,0 +1,62 @@
+---
+kind: Template
+apiVersion: v1
+metadata:
+  name: cloudsql-template
+parameters:
+  - name: POSTGRES_INSTANCE
+    description: "Connection name for CloudSQL instance, e.g. myproject1:us-central1:myinstance1"
+    required: true
+    parameterType: string
+objects:
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: cloudsql
+    spec:
+      type: ClusterIP
+      selector:
+        app: cloudsql-proxy
+      ports:
+        - port: 5432
+          targetPort: postgres
+  - kind: Deployment
+    apiVersion: extensions/v1beta1
+    metadata:
+      name: cloudsql-proxy
+      labels:
+        app: cloudsql-proxy
+    spec:
+      replicas: 1
+      template:
+        metadata:
+          name: cloudsql-proxy
+          labels:
+            app: cloudsql-proxy
+        spec:
+          containers:
+            - name: cloudsql-proxy
+              image: gcr.io/cloudsql-docker/gce-proxy:1.11
+              command: ["/cloud_sql_proxy", "--dir=/cloudsql",
+                        "-instances=$(POSTGRES_INSTANCE)=tcp:0.0.0.0:5432",
+                        "-credential_file=/secrets/cloudsql/credentials.json"]
+              ports:
+                - name: postgres
+                  containerPort: 5432
+              volumeMounts:
+                - name: cloudsql-instance-credentials
+                  mountPath: /secrets/cloudsql
+                  readOnly: true
+                - name: ssl-certs
+                  mountPath: /etc/ssl/certs
+                - name: cloudsql
+                  mountPath: /cloudsql
+          volumes:
+            - name: cloudsql-instance-credentials
+              secret:
+                secretName: cloudsql-instance-credentials
+            - name: cloudsql
+              emptyDir:
+            - name: ssl-certs
+              hostPath:
+                path: /etc/ssl/certs

@@ -2,9 +2,7 @@
 kind: Template
 apiVersion: v1
 metadata:
-  name: redash
-labels:
-  template: redash-template
+  name: redash-template
 parameters:
   - name: POSTGRES_USER
     required: true
@@ -12,13 +10,21 @@ parameters:
   - name: POSTGRES_PW
     required: true
     parameterType: string
-  - name: POSTGRES_INSTANCE
-    required: true
-    parameterType: string
   - name: REDASH_COOKIE_SECRET
     required: true
     parameterType: string
 objects:
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: redash-svc
+    spec:
+      type: LoadBalancer
+      selector:
+        app: redash
+      ports:
+        - port: 80
+          targetPort: redash-http
   - kind: Deployment
     apiVersion: extensions/v1beta1
     metadata:
@@ -41,7 +47,7 @@ objects:
                   containerPort: 5000
               env:
                 - name: REDASH_DATABASE_URL
-                  value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PW)@localhost:5432/redash"
+                  value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PW)@cloudsql:5432/redash"
                 - name: REDASH_REDIS_URL
                   value: "redis://localhost:6379/0"
                 - name: PYTHONUNBUFFERED
@@ -58,7 +64,7 @@ objects:
                   memory: 1Gi
               env:
                 - name: REDASH_DATABASE_URL
-                  value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PW)@localhost:5432/redash"
+                  value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PW)@cloudsql:5432/redash"
                 - name: REDASH_REDIS_URL
                   value: "redis://localhost:6379/0"
                 - name: WORKERS_COUNT
@@ -75,25 +81,3 @@ objects:
               ports:
                 - name: redis
                   containerPort: 6379
-            - name: cloudsql-proxy
-              image: gcr.io/cloudsql-docker/gce-proxy:1.11
-              command: ["/cloud_sql_proxy", "--dir=/cloudsql",
-                        "-instances=$(POSTGRES_INSTANCE)=tcp:5432",
-                        "-credential_file=/secrets/cloudsql/credentials.json"]
-              volumeMounts:
-                - name: cloudsql-instance-credentials
-                  mountPath: /secrets/cloudsql
-                  readOnly: true
-                - name: ssl-certs
-                  mountPath: /etc/ssl/certs
-                - name: cloudsql
-                  mountPath: /cloudsql
-          volumes:
-            - name: cloudsql-instance-credentials
-              secret:
-                secretName: cloudsql-instance-credentials
-            - name: cloudsql
-              emptyDir:
-            - name: ssl-certs
-              hostPath:
-                path: /etc/ssl/certs
