@@ -2,9 +2,9 @@
 kind: Template
 apiVersion: v1
 metadata:
-  name: cloudsql-template
+  name: redash-resources-template
 parameters:
-  - name: POSTGRES_INSTANCE
+  - name: POSTGRES_CONN_NAME
     description: "Connection name for CloudSQL instance, e.g. myproject1:us-central1:myinstance1"
     required: true
     parameterType: string
@@ -40,7 +40,7 @@ objects:
             - name: cloudsql-proxy
               image: gcr.io/cloudsql-docker/gce-proxy:1.11
               command: ["/cloud_sql_proxy", "--dir=/cloudsql",
-                        "-instances=$(POSTGRES_INSTANCE)=tcp:0.0.0.0:5432",
+                        "-instances=$(POSTGRES_CONN_NAME)=tcp:0.0.0.0:5432",
                         "-credential_file=/secrets/cloudsql/credentials.json"]
               ports:
                 - name: postgres
