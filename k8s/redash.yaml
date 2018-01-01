@@ -17,7 +17,7 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: redash-svc
+      name: redash
     spec:
       type: LoadBalancer
       selector:
@@ -47,9 +47,9 @@ objects:
                   containerPort: 5000
               env:
                 - name: REDASH_DATABASE_URL
-                  value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PW)@cloudsql:5432/redash"
+                  value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PW)@redash-resources:5432/redash"
                 - name: REDASH_REDIS_URL
-                  value: "redis://localhost:6379/0"
+                  value: "redis://redash-resources:6379/0"
                 - name: PYTHONUNBUFFERED
                   value: "0"
                 - name: REDASH_COOKIE_SECRET
@@ -64,9 +64,9 @@ objects:
                   memory: 1Gi
               env:
                 - name: REDASH_DATABASE_URL
-                  value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PW)@cloudsql:5432/redash"
+                  value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PW)@redash-resources:5432/redash"
                 - name: REDASH_REDIS_URL
-                  value: "redis://localhost:6379/0"
+                  value: "redis://redash-resources:6379/0"
                 - name: WORKERS_COUNT
                   value: "2"
                 - name: QUEUES
@@ -76,8 +76,3 @@ objects:
                 - name: REDASH_LOG_LEVEL
                   value: "INFO"
               args: ["scheduler"]
-            - name: redis
-              image: redis:3.0-alpine
-              ports:
-                - name: redis
-                  containerPort: 6379
