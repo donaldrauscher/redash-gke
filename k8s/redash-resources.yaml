@@ -58,6 +58,9 @@ objects:
               ports:
                 - name: redis
                   containerPort: 6379
+              volumeMounts:
+                - name: redis-disk
+                  mountPath: /data/redis
           volumes:
             - name: cloudsql-instance-credentials
               secret:
@@ -67,3 +70,7 @@ objects:
             - name: ssl-certs
               hostPath:
                 path: /etc/ssl/certs
+            - name: redis-disk
+              gcePersistentDisk:
+                pdName: redash-redis-disk
+                fsType: ext4
