@@ -14,6 +14,11 @@ gcloud sql users create [POSTGRES_USER] cloudsqlproxy~% \
   --password=[POSTGRES_PW]
 ```
 
+Persistent drive for Redis:
+``` bash
+gcloud compute disks create --size 200GB redash-redis-disk
+```
+
 Kubernetes cluster:
 1. Create a small cluster for Redash
 2. Add secret containing the previously-created service account for CloudSQL
@@ -43,4 +48,3 @@ ktmpl k8s/redash.yaml --parameter-file config.yaml | kubectl apply -f -
 ```
 
 NOTE: I use a nifty tool called [`ktmpl`](https://github.com/jimmycuadra/ktmpl) to do parameter substitutions in my Kubernetes manifests.
-
