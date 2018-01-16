@@ -1,20 +1,32 @@
+variable "project" {}
+variable "postgres_user" {}
+variable "postgres_pw" {}
+
+variable "region" {
+  default = "us-central1"
+}
+
+variable "zone" {
+  default = "us-central1-f"
+}
+
 provider "google" {
   version = "~> 1.4"
-  project = "blog-180218"
-  region = "us-central1"
+  project = "${var.project}"
+  region = "${var.region}"
 }
 
 resource "google_compute_disk" "redash-redis-disk" {
   name  = "redash-redis-disk"
   type  = "pd-ssd"
   size = "200"
-  zone  = "us-central1-f"
+  zone  = "${var.zone}"
 }
 
 resource "google_sql_database_instance" "redash-db" {
-  name = "redash-db"
+  name = "redash-db-v3"
   database_version = "POSTGRES_9_6"
-  region  = "us-central1"
+  region = "${var.region}"
   settings {
     tier = "db-f1-micro"
   }
@@ -26,8 +38,17 @@ resource "google_sql_database" "redash-schema" {
 }
 
 resource "google_sql_user" "proxyuser" {
-  name = "proxyuser"
+  name = "${var.postgres_user}"
+  password = "${var.postgres_pw}"
   instance = "${google_sql_database_instance.redash-db.name}"
   host = "cloudsqlproxy~%"
-  password = "hsader"
+}
+
+resource "google_container_cluster" "redash-cluster" {
+  name = "redash-cluster"
+  zone = "${var.zone}"
+  initial_node_count = "1"
+  node_config {
+    machine_type = "n1-standard-4"
+  }
 }
