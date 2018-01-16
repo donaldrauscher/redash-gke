@@ -1,33 +1,20 @@
 # redash-gke
 Setting up Redash on GKE
 
+## Dependencies
+
+* [Terraform](https://www.terraform.io/) for defining infrastructure as code
+* A nifty tool called [`ktmpl`](https://github.com/jimmycuadra/ktmpl) for doing parameter substitutions in my Kubernetes manifests
+
 ## Infrastructure Setup
 
-CloudSQL backend:
-1. Create a Postgres instance on CloudSQL and a `redash` schema (UI)
-2. Create a service account (Role = "Cloud SQL Client") that the CloudSQL proxy on Kubernetes will use, and download the JSON key (UI)
-3. Create a Postgres user account for Redash
-
-``` bash
-gcloud sql users create [POSTGRES_USER] cloudsqlproxy~% \
-  --instance=[POSTGRES_INSTANCE_ID] \
-  --password=[POSTGRES_PW]
+```
+terraform apply
 ```
 
-Persistent drive for Redis:
-``` bash
-gcloud compute disks create --size 200GB redash-redis-disk
+You will also need to create a service account that the CloudSQL proxy on Kubernetes will use.  Create that (Role = "Cloud SQL Client") and download the JSON key.  Once Kubernetes cluster is up, you need to attach a secret containing the previously-created service account.  And, if you haven't already, fetch credentials so that you can run `kubectl` commands on your cluster.
 ```
-
-Kubernetes cluster:
-1. Create a small cluster for Redash
-2. Add secret containing the previously-created service account for CloudSQL
-
-``` bash
-gcloud container clusters create redash-cluster \
-  --num-nodes=1 \
-  --machine-type n1-standard-4
-
+gcloud container clusters get-credentials redash-cluster
 gcloud config set container/cluster redash-cluster
 
 kubectl create secret generic cloudsql-instance-credentials \
@@ -46,5 +33,3 @@ ktmpl k8s/redash-resources.yaml --parameter-file config.yaml | kubectl apply -f 
 ktmpl k8s/redash-init.yaml --parameter-file config.yaml | kubectl apply -f -
 ktmpl k8s/redash.yaml --parameter-file config.yaml | kubectl apply -f -
 ```
-
-NOTE: I use a nifty tool called [`ktmpl`](https://github.com/jimmycuadra/ktmpl) to do parameter substitutions in my Kubernetes manifests.
