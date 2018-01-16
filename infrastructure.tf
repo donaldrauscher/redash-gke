@@ -24,7 +24,7 @@ resource "google_compute_disk" "redash-redis-disk" {
 }
 
 resource "google_sql_database_instance" "redash-db" {
-  name = "redash-db-v3"
+  name = "redash-db"
   database_version = "POSTGRES_9_6"
   region = "${var.region}"
   settings {
