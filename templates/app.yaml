@@ -1,0 +1,55 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: redash
+spec:
+  type: LoadBalancer
+  selector:
+    app: redash
+    tier: app
+  ports:
+    - port: 80
+      targetPort: 5000
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: redash
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redash
+        tier: app
+    spec:
+      containers:
+        - name: server
+          image: redash/redash:latest
+          resources:
+            requests:
+              memory: 1Gi
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: config
+          env:
+            - name: REDASH_COOKIE_SECRET
+              value: {{ .Values.cookieSecret }}
+          args: ["server"]
+        - name: workers
+          image: redash/redash:latest
+          resources:
+            requests:
+              memory: 1Gi
+          envFrom:
+            - configMapRef:
+                name: config
+          env:
+            - name: WORKERS_COUNT
+              value: "{{ .Values.numWorkers }}"
+            - name: QUEUES
+              value: "queries,scheduled_queries,celery"
+          args: ["scheduler"]

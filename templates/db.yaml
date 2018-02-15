@@ -1,0 +1,92 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: postgres
+spec:
+  type: ClusterIP
+  selector:
+    app: redash
+    tier: postgres
+  ports:
+    - name: postgres
+      port: 5432
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis
+spec:
+  type: ClusterIP
+  selector:
+    app: redash
+    tier: redis
+  ports:
+    - name: redis
+      port: 6379
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redash
+        tier: postgres
+    spec:
+      containers:
+        - name: cloudsql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.11
+          command: ["/cloud_sql_proxy", "--dir=/cloudsql",
+                    "-instances={{ .Values.projectId }}:us-central1:redash-db=tcp:0.0.0.0:5432",
+                    "-credential_file=/secrets/cloudsql/credentials.json"]
+          ports:
+            - name: postgres
+              containerPort: 5432
+          volumeMounts:
+            - name: cloudsql-instance-credentials
+              mountPath: /secrets/cloudsql
+              readOnly: true
+            - name: ssl-certs
+              mountPath: /etc/ssl/certs
+            - name: cloudsql
+              mountPath: /cloudsql
+      volumes:
+        - name: cloudsql-instance-credentials
+          secret:
+            secretName: cloudsql-instance-credentials
+        - name: cloudsql
+          emptyDir:
+        - name: ssl-certs
+          hostPath:
+            path: /etc/ssl/certs
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redash
+        tier: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:3.0-alpine
+          ports:
+            - name: redis
+              containerPort: 6379
+          volumeMounts:
+            - name: redis-disk
+              mountPath: /data/redis
+      volumes:
+        - name: redis-disk
+          gcePersistentDisk:
+            pdName: redash-redis-disk
+            fsType: ext4

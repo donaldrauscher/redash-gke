@@ -1,6 +1,11 @@
 variable "project" {}
-variable "postgres_user" {}
-variable "postgres_pw" {}
+
+variable "postgres_user" {
+  default = "redash"
+}
+variable "postgres_pw" {
+  default = "hsader"
+}
 
 variable "region" {
   default = "us-central1"

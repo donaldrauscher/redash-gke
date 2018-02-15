@@ -1,0 +1,19 @@
+---
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: init-db
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: redash-init
+          image: redash/redash:latest
+          resources:
+            requests:
+              memory: 1Gi
+          envFrom:
+            - configMapRef:
+                name: config
+          args: ["create_db"]

@@ -1,0 +1,8 @@
+
+cookieSecret: somethingverysecret
+
+postgres:
+  user: redash
+  pw: hsader
+
+numWorkers: 2

@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  REDASH_DATABASE_URL: postgresql://{{ .Values.postgres.user }}:{{ .Values.postgres.pw }}@postgres:5432/redash
+  REDASH_REDIS_URL: "redis://redis:6379/0"
+  PYTHONUNBUFFERED: "0"
+  REDASH_LOG_LEVEL: "INFO"
