@@ -3,6 +3,9 @@ kind: Service
 apiVersion: v1
 metadata:
   name: postgres
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "2"
 spec:
   type: ClusterIP
   selector:
@@ -16,6 +19,9 @@ kind: Service
 apiVersion: v1
 metadata:
   name: redis
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "2"
 spec:
   type: ClusterIP
   selector:
@@ -29,6 +35,9 @@ kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
   name: postgres
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "2"
 spec:
   replicas: 1
   template:
@@ -68,6 +77,9 @@ kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
   name: redis
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "2"
 spec:
   replicas: 1
   template:
