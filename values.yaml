@@ -1,5 +1,5 @@
 
-cookieSecret: somethingverysecret
+cookieSecret: keepitsecretkeepitsafe
 
 postgres:
   user: redash
