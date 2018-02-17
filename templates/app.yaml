@@ -3,6 +3,8 @@ kind: Service
 apiVersion: v1
 metadata:
   name: redash
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: redash-static-ip
 spec:
   type: LoadBalancer
   selector:

@@ -21,6 +21,10 @@ provider "google" {
   region = "${var.region}"
 }
 
+resource "google_compute_global_address" "redash-static-ip" {
+  name = "redash-static-ip"
+}
+
 resource "google_compute_disk" "redash-redis-disk" {
   name  = "redash-redis-disk"
   type  = "pd-ssd"
